@@ -27,7 +27,7 @@ jobs:
       - name: Add version from file to vars
         run: |
           VERSION=`cat version.txt`
-          echo "APP_VERSION=$VERSION >> $GITHUB_ENV"
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Create image name patern as var
         run: |
