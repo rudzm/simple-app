@@ -1,0 +1,48 @@
+name: Build and deploy add
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: environment
+        description: "Select environment to deploy"
+        required: true
+
+jobs:
+  build-and-deploy-app:
+    name: Build and push image
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.envitonment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref.name }}
+
+      - name: Add sanitize branch to vars
+        run: |
+          echo "GITHUB_REF_SANITIZE=${GITHUB_REF_NAME//[\/_]/-}" >> $GITHUB_ENV
+
+      - name: Add version from file to vars
+        run: |
+          VERSION=`cat version.txt`
+          echo "APP_VERSION=$VERSION >> $GITHUB_ENV"
+
+      - name: Create image name patern as var
+        run: |
+          echo "IMAGE_NAME=${REGION}-docker.pkg.dev/${PROJECT_ID}/plenti/${APP_NAME}:${APP_VERSION} >> $GITHUB_ENV"
+
+      - uses: "google-github-actions/auth@v1"
+        id: "auth"
+        name: "Auth to GCP"
+        with:
+          credentials_json: "${{ secrets.GOOGLE_CREDENTIALS }}"
+          token_format: "access_token"
+
+      - name: Docker Build image
+        run: |-
+          docker build \
+            -f Dockerfile \
+            --tag "${{ env.IMAGE_NAME }}" \
+            .
