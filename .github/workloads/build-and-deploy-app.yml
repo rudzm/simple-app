@@ -31,7 +31,7 @@ jobs:
 
       - name: Create image name patern as var
         run: |
-          echo "IMAGE_NAME=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/plenti/${{ env.APP_NAME }}:${{ env.APP_VERSION }} >> $GITHUB_ENV"
+          echo "APP_IMAGE_NAME=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/plenti/${{ env.APP_NAME }}:${{ env.APP_VERSION }}-${{ env.GITHUB_REF_SANITIZE}} >> $GITHUB_ENV"
 
       - uses: "google-github-actions/auth@v1"
         id: "auth"
@@ -44,5 +44,5 @@ jobs:
         run: |-
           docker build \
             -f Dockerfile \
-            --tag "${{ env.IMAGE_NAME }}" \
+            --tag "${{ env.APP_IMAGE_NAME }}" \
             .
