@@ -49,6 +49,14 @@ jobs:
             -f Dockerfile \
             --tag "${{ env.APP_IMAGE_NAME }}" \
             .
+
+      - uses: "docker/login-action@v2"
+        name: "Docker login"
+        with:
+          registry: ${{ vars.REGION }}-docker.pkg.dev
+          username: oauth2accesstoken
+          password: ${{ steps.auth.outputs.access_token }}
+
       - name: Docker Push
         run: |
           docker push "${{ env.APP_IMAGE_NAME }}"
