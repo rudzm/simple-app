@@ -12,7 +12,7 @@ jobs:
   build-and-deploy-app:
     name: Build and push image
     runs-on: ubuntu-latest
-    environment: ${{ inputs.envitonment }}
+    environment: ${{ inputs.environment }}
 
     steps:
       - name: Checkout
@@ -75,13 +75,13 @@ jobs:
         shell: bash
         working-directory: managment-repo
         run: |
-          mkdir -p apps/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}
+          mkdir -p apps/${{ inputs.environment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}
 
       - name: Create Chart file
         shell: bash
         working-directory: managment-repo
         run: |
-          cat << EOF > apps/${{ inputs.envitonment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}/Chart.yaml
+          cat << EOF > apps/${{ inputs.environment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}/Chart.yaml
           apiVersion: v2
           name: ${{ vars.APP_NAME }}-${{ env.GITHUB_REF_SANITIZE}}
           description: A Helm chart for Kubernetes
@@ -94,58 +94,11 @@ jobs:
             version: 0.5.0
           EOF
 
-      - name: Create Chart file
+      - name: Create values file
         shell: bash
         working-directory: managment-repo
         run: |
-          cat << EOF > apps/${{ inputs.envitonment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}/values.yaml
-          app-deployment:
-            replicaCount: 1
-          
-            image:
-              repository: ${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/plenti/${{ vars.APP_NAME }}
-              pullPolicy: Always
-              tag: "${{ env.APP_VERSION }}-${{ env.GITHUB_REF_SANITIZE}}"
-          
-            imagePullSecrets: []
-            fullnameOverride: "${{ vars.APP_NAME }}-${{ env.GITHUB_REF_SANITIZE}}"
-          
-            podAnnotations: {}
-          
-            service:
-              type: NodePort
-              port: 80
-          
-            ingress:
-              enabled: true
-              className: ""
-              annotations: {}
-          
-              hosts:
-                - host: ${{ vars.APP_NAME }}-${{ env.GITHUB_REF_SANITIZE}}.plenti.network
-                  paths:
-                    - path: /
-                      pathType: Exact
-              tls: []
-            
-            iap:
-              enabled: true
-              secretName: supply
-          
-            resources:
-              limits:
-                cpu: 250m
-                memory: 512Mi
-              requests:
-                cpu: 250m
-                memory: 512Mi
-          EOF
-
-      - name: Create Chart file
-        shell: bash
-        working-directory: managment-repo
-        run: |
-          cat << EOF > apps/${{ inputs.envitonment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}/values.yaml
+          cat << EOF > apps/${{ inputs.environment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}/values.yaml
           app-deployment:
             replicaCount: 1
           
@@ -192,7 +145,7 @@ jobs:
         shell: bash
         working-directory: managment-repo
         run: |
-          cat << EOF > apps/${{ inputs.envitonment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}.yaml
+          cat << EOF > apps/${{ inputs.environment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}.yaml
           apiVersion: argoproj.io/v1alpha1
           kind: Application
           metadata:
