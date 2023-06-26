@@ -27,6 +27,7 @@ jobs:
           echo "GITHUB_REF_SANITIZE=${GITHUB_REF_NAME//[\/_]/-}" >> $GITHUB_ENV
 
       - name: Add version from file to vars
+        working-directory: main-repo
         run: |
           VERSION=`cat version.txt`
           echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
@@ -44,7 +45,7 @@ jobs:
 
       - name: Docker Build image
         run: |-
-          docker build \
+          cd main-repo && docker build \
             -f Dockerfile \
             --tag "${{ env.APP_IMAGE_NAME }}" \
             .
