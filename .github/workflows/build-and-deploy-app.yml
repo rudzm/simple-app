@@ -159,7 +159,7 @@ jobs:
               server: https://kubernetes.default.svc
             project: default
             source:
-              path: apps/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}
+              path: apps/${{ inputs.environment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}
               repoURL: https://github.com/rudzm/gitops
               targetRevision: HEAD
             syncPolicy:
