@@ -19,6 +19,8 @@ jobs:
         uses: actions/checkout@v3
         with:
           ref: ${{ github.ref.name }}
+          persist-credentails: false
+          path: 'main-repo'
 
       - name: Add sanitize branch to vars
         run: |
@@ -46,3 +48,173 @@ jobs:
             -f Dockerfile \
             --tag "${{ env.APP_IMAGE_NAME }}" \
             .
+      - name: Docker Push
+        run: |
+          docker push "${{ env.APP_IMAGE_NAME }}"
+
+      - name: Checkout managment repo
+        uses: actions/checkout@v3
+        with:
+          ref: 'main'
+          fetch-depth: 0
+          repository: 'rudzm/managment'
+          token: ${{ secrets.BOT_TOKEN }}
+          persist-credentails: true
+          path: 'managment-repo'
+      
+      - name: Create path
+        shell: bash
+        working-directory: managment-repo
+        run: |
+          mkdir -p apps/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}
+
+      - name: Create Chart file
+        shell: bash
+        working-directory: managment-repo
+        run: |
+          cat << EOF > apps/${{ inputs.envitonment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}/Chart.yaml
+          apiVersion: v2
+          name: ${{ vars.APP_NAME }}-${{ env.GITHUB_REF_SANITIZE}}
+          description: A Helm chart for Kubernetes
+          type: application
+          version: 0.1.0
+          appVersion: "1.0"
+          dependencies:
+          - name: app-deployment
+            repository: https://raw.githubusercontent.com/rudzm/helm-charts-repo/main/
+            version: 0.5.0
+          EOF
+
+      - name: Create Chart file
+        shell: bash
+        working-directory: managment-repo
+        run: |
+          cat << EOF > apps/${{ inputs.envitonment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}/values.yaml
+          app-deployment:
+            replicaCount: 1
+          
+            image:
+              repository: ${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/plenti/${{ vars.APP_NAME }}
+              pullPolicy: Always
+              tag: "${{ env.APP_VERSION }}-${{ env.GITHUB_REF_SANITIZE}}"
+          
+            imagePullSecrets: []
+            fullnameOverride: "${{ vars.APP_NAME }}-${{ env.GITHUB_REF_SANITIZE}}"
+          
+            podAnnotations: {}
+          
+            service:
+              type: NodePort
+              port: 80
+          
+            ingress:
+              enabled: true
+              className: ""
+              annotations: {}
+          
+              hosts:
+                - host: ${{ vars.APP_NAME }}-${{ env.GITHUB_REF_SANITIZE}}.plenti.network
+                  paths:
+                    - path: /
+                      pathType: Exact
+              tls: []
+            
+            iap:
+              enabled: true
+              secretName: supply
+          
+            resources:
+              limits:
+                cpu: 250m
+                memory: 512Mi
+              requests:
+                cpu: 250m
+                memory: 512Mi
+          EOF
+
+      - name: Create Chart file
+        shell: bash
+        working-directory: managment-repo
+        run: |
+          cat << EOF > apps/${{ inputs.envitonment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}/values.yaml
+          app-deployment:
+            replicaCount: 1
+          
+            image:
+              repository: ${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/plenti/${{ vars.APP_NAME }}
+              pullPolicy: Always
+              tag: "${{ env.APP_VERSION }}-${{ env.GITHUB_REF_SANITIZE}}"
+          
+            imagePullSecrets: []
+            fullnameOverride: "${{ vars.APP_NAME }}-${{ env.GITHUB_REF_SANITIZE}}"
+          
+            podAnnotations: {}
+          
+            service:
+              type: NodePort
+              port: 80
+          
+            ingress:
+              enabled: true
+              className: ""
+              annotations: {}
+          
+              hosts:
+                - host: ${{ vars.APP_NAME }}-${{ env.GITHUB_REF_SANITIZE}}.plenti.network
+                  paths:
+                    - path: /
+                      pathType: Exact
+              tls: []
+            
+            iap:
+              enabled: true
+              secretName: supply
+          
+            resources:
+              limits:
+                cpu: 250m
+                memory: 512Mi
+              requests:
+                cpu: 250m
+                memory: 512Mi
+          EOF
+
+      - name: Create Application file
+        shell: bash
+        working-directory: managment-repo
+        run: |
+          cat << EOF > apps/${{ inputs.envitonment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}.yaml
+          apiVersion: argoproj.io/v1alpha1
+          kind: Application
+          metadata:
+            name: ${{ vars.APP_NAME }}-${{ env.GITHUB_REF_SANITIZE}}
+            namespace: argocd
+            finalizers:
+            - resources-finalizer.argocd.argoproj.io
+          spec:
+            destination:
+              namespace: supply
+              server: https://kubernetes.default.svc
+            project: default
+            source:
+              path: apps/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}
+              repoURL: https://github.com/rudzm/gitops
+              targetRevision: HEAD
+            syncPolicy:
+              automated:
+                prune: true
+                selfHeal: true
+              syncOptions:
+              - CreateNamespace=true
+          EOF
+      
+      - name: Push and commit changes
+        shell: bash
+        working-directory: managment-repo
+        run: |
+          git add -A
+          git config --global user.name "Git Bot"
+          git config --global user.email "<>"
+          git commit -m "Update managment repo"
+          git push
+        
