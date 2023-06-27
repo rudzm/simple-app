@@ -5,6 +5,7 @@ FROM python:3.9
 ENV APP_HOME /app
 ENV FLASK_APP app.py
 ENV FLASK_RUN_HOST 0.0.0.0
+ENV FLASK_RUN_PORT 80
 ENV FLASK_ENV production
 
 # Tworzymy folder na naszą aplikację
@@ -18,7 +19,7 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Otwieramy port 5000
-EXPOSE 5000
+EXPOSE 80
 
 # Uruchamiamy aplikację
 CMD ["flask", "run"]
