@@ -145,7 +145,7 @@ jobs:
         shell: bash
         working-directory: managment-repo
         run: |
-          cat << EOF > apps/${{ inputs.environment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}.yaml
+          cat << EOF > apps/${{ inputs.environment }}/${{ vars.APP_NAME }}/${{ vars.APP_NAME }}-${{ env.GITHUB_REF_SANITIZE}}.yaml
           apiVersion: argoproj.io/v1alpha1
           kind: Application
           metadata:
@@ -160,7 +160,7 @@ jobs:
             project: default
             source:
               path: apps/${{ inputs.environment }}/${{ vars.APP_NAME }}/${{ env.GITHUB_REF_SANITIZE}}
-              repoURL: https://github.com/rudzm/gitops
+              repoURL: https://github.com/rudzm/managment
               targetRevision: HEAD
             syncPolicy:
               automated:
