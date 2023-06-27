@@ -31,10 +31,13 @@ jobs:
         run: |
           VERSION=`cat version.txt`
           echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+      
+      - name: Get short SHA
+        run: echo "SHORT_SHA=$("${{ github.sha }}".SubString(0, 8))" >> $env:GITHUB_ENV
 
       - name: Create image name patern as var
         run: |
-          echo "APP_IMAGE_NAME=${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/plenti/${{ vars.APP_NAME }}:${{ env.APP_VERSION }}-${{ env.GITHUB_REF_SANITIZE}}" >> $GITHUB_ENV
+          echo "APP_IMAGE_NAME=${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/plenti/${{ vars.APP_NAME }}:preview-${{ env.GITHUB_REF_SANITIZE}}-${{ env.SHORT_SHA }} " >> $GITHUB_ENV
 
       - uses: "google-github-actions/auth@v1"
         id: "auth"
@@ -105,7 +108,7 @@ jobs:
             image:
               repository: ${{ vars.REGION }}-docker.pkg.dev/${{ vars.PROJECT_ID }}/plenti/${{ vars.APP_NAME }}
               pullPolicy: Always
-              tag: "${{ env.APP_VERSION }}-${{ env.GITHUB_REF_SANITIZE}}"
+              tag: "preview-${{ env.GITHUB_REF_SANITIZE}}-${{ env.SHORT_SHA }}"
           
             imagePullSecrets: []
             fullnameOverride: "${{ vars.APP_NAME }}-${{ env.GITHUB_REF_SANITIZE}}"
